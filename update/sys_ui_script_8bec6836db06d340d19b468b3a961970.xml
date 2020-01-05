@@ -4,10 +4,10 @@
         <description/>
         <global>false</global>
         <name>x_pisn_multiform.Service.PiMfManager</name>
-        <script><![CDATA[PiMf.service('PiMfManager', function PiMfManager(
-  $q, spUtil, i18n, $location, $rootScope, $timeout) {
+        <script><![CDATA[/* eslint-disable no-mixed-spaces-and-tabs */
+PiMf.service("PiMfManager", function PiMfManager($q, spUtil, i18n, $location, $rootScope, $timeout) {
 
-  'use strict';
+  "use strict";
 
   var master;
   var containers;
@@ -81,10 +81,10 @@
 
     var i = 0;
 
-    containers = master.model._sections.reduce(function(acc, cv, idx) {
+    containers = master.model._sections.reduce(function (acc, cv, idx) {
 
       /** Create a new container if the section has a caption or is first */
-      if (cv.captionDisplay !== '' && idx !== 0) {
+      if (cv.captionDisplay !== "" && idx !== 0) {
         i++;
       }
 
@@ -101,9 +101,12 @@
     screenCount = containers.length;
 
     /** Register onChange event on the form, so we know when the form has changed */
-    master.gForm.$private.events.on('onChange', function(field, x, newVal) {
+    master.gForm.$private.events.on("onChange", function (field, x, newVal) {
+      console.log("Master form field: " + field + " changed: " + newVal, master);
       _formChanged(field, newVal, master);
     });
+
+    console.log("Setup master model and gForm", master, multiFormData);
 
     goToScreen(0);
   }
@@ -127,12 +130,13 @@
       gForm: gFormInstance,
       referenceToParent: referenceToParent,
       childId: childId
-    }
+    };
 
     children.push(childrenBySection[childId][i]);
 
     /** Register onChange event on the form, so we know when the form has changed */
-    childrenBySection[childId][i].gForm.$private.events.on('onChange', function(field, x, newVal) {
+    childrenBySection[childId][i].gForm.$private.events.on("onChange", function (field, x, newVal) {
+      console.log("Child form field: " + field + " changed: " + newVal, childrenBySection[childId][i], master);
       _formChanged(field, newVal, childrenBySection[childId][i]);
     });
   }
@@ -177,17 +181,17 @@
 
     /** The children for the current screen */
     var screenChildren = mfData.sections[getSelectedContainer()[0].id];
-	  
-	  if (screenChildren) {
-		  return {
-			  top: (mfData.global.top || []).concat(screenChildren.top),
-			  right: (mfData.global.right || []).concat(screenChildren.right),
-			  bottom: (mfData.global.bottom || []).concat(screenChildren.bottom),
-			  left: (mfData.global.left || []).concat(screenChildren.left)
-		};
-	  }
 
-    
+    if (screenChildren) {
+      return {
+        top: (mfData.global.top || []).concat(screenChildren.top),
+        right: (mfData.global.right || []).concat(screenChildren.right),
+        bottom: (mfData.global.bottom || []).concat(screenChildren.bottom),
+        left: (mfData.global.left || []).concat(screenChildren.left)
+      };
+    }
+
+
   }
 
   /**
@@ -280,7 +284,7 @@
       var mandatory = [];
       var fieldNames = gFormInstance.getFieldNames();
 
-      fieldNames.forEach(function(fieldName) {
+      fieldNames.forEach(function (fieldName) {
         if (gFormInstance.isMandatory(fieldName)) {
           mandatory.push(fieldName);
         }
@@ -328,7 +332,7 @@
    * @return {undefined}
    */
   function _processScreenChange() {
-    screenChangeFuncs.forEach(function(cv) {
+    screenChangeFuncs.forEach(function (cv) {
       cv();
     });
   }
@@ -348,7 +352,7 @@
     invalidMinMax = [];
     savedForms = 0;
 
-    return $q(function(s, f) {
+    return $q(function (s, f) {
 
       success = s;
       failure = f;
@@ -366,7 +370,7 @@
       var masterIncomplete = _getIncomplete(master.gForm);
       incompleteFieldNames = incompleteFieldNames.concat(masterIncomplete);
 
-      masterIncomplete.forEach(function(fieldName) {
+      masterIncomplete.forEach(function (fieldName) {
         _setErrorFieldMessage(fieldName, master.gForm);
       });
 
@@ -377,10 +381,15 @@
         }
       }
 
+
       if (incompleteFieldNames.length === 0 && invalidMinMax.length === 0) {
         /** No incomplete fields... let's save! */
 
-        master.gForm.submit(_getPrimaryAction(master).action_name);
+        console.log("saving master: " + master.gForm.getTableName(), master.model, master.model._fields.short_description.value);
+        debugger;
+        //master.gForm.submit(_getPrimaryAction(master).action_name);
+        //submit(master);
+        saveForm(master, "master");
         masterListener = $rootScope.$on("spModel.uiActionComplete", _onMasterSaveSuccess);
 
       } else {
@@ -396,6 +405,23 @@
     });
   }
 
+  function submit(form) {
+    /* create the payload */
+    saveForm(form);
+
+    /*
+    PiMfManager.save($scope).then(function (sysId) {
+    	$location.search({
+    		'id': c.options.success_page,
+    		'table': c.options.table,
+    		'sys_id': sysId
+    	});
+    }, function (incomplete) {
+
+    });
+    */
+  }
+
   /**
    * Function to execute when the master form reports back as being saved
    * @param  {Object} evt      AngularJS $on event object
@@ -405,14 +431,18 @@
   function _onMasterSaveSuccess(evt, response) {
 
     master.sysId = (response.isInsert) ? response.sys_id : master.gForm.getUniqueValue();
+    debugger;
+    console.log("Master " + master.gForm.getTableName() + " id: " + master.sysId + " form was saved.", response, evt);
     masterListener();
 
     if (childForms > 0) {
-
+      console.log("triggered child form save. Initiated childListener.", childForms, childrenBySection);
       childListener = $rootScope.$on("spModel.uiActionComplete", _onChildSaveSuccess);
 
       for (var key in childrenBySection) {
         if (childrenBySection.hasOwnProperty(key)) {
+          debugger;
+          console.log("working on children", childrenBySection[key]);
           childrenBySection[key].forEach(_saveChildForm);
         }
       }
@@ -420,6 +450,75 @@
     } else {
       success(master.sysId);
     }
+
+  }
+
+  /*
+  return $http.post("/api/now/sp/search", payload).then(function(response) {
+			// Prevents typeahead from displaying suggestions if queries from page and input are the same
+			if ($location.search().q == query)
+				return;
+
+			var result = response.data.result;
+			var resultCount = result != null ? result.results.length : 0
+			sendLiveMessage(resultCount);
+
+			c.data.results = result.results;
+			c.latestQuery = query;
+
+			return result.results.map(function(item) {
+				var config = c.data.searchSourceConfiguration[item.__search_source_id__];
+
+				if (!item.url && config.linkToPage) {
+					item.url = "?id=" + config.linkToPage;
+					if (item.sys_id)
+						item.url += "&sys_id=" + item.sys_id;
+					if (item.table)
+						item.url += "&table=" + item.table
+				}
+
+				if (config.type == "ADVANCED") {
+					item.templateID = config.template;
+				} else {
+					item.glyph = config.glyph;
+				}
+				return item;
+			});
+  */
+
+  function saveForm(oForm, masterOrChild) {
+    var gForm = oForm.gForm;
+    var oModel = oForm.model;
+    var oFields = oModel._fields;
+
+    if (masterOrChild && masterOrChild == "child") {
+      oFields.referenceToParent = oModel.referenceToParent;
+      oFields.childId = oModel.childId;
+    }
+    var payload = {
+      "sys_id": gForm.getUniqueValue(),
+      "table": gForm.getTableName(),
+      "fields": oFields
+    };
+    console.log("sending saveForm paylaod", payload);
+    debugger;
+    $http.post("/api/x_pisn_multiform/multiform/create", payload).then(function handleSuccess(response) {
+      debugger;
+      if (response) {
+        console.log("got create result", response);
+        $location.search({
+          "id": c.options.success_page,
+          "table": c.options.table,
+          "sys_id": sysId
+        });
+      } else {
+        console.log("got NO create result", response);
+      }
+      
+    }, function (incomplete) {
+
+    });
+
   }
 
   /**
@@ -428,8 +527,11 @@
    * @return {undefined}
    */
   function _saveChildForm(cv) {
+    console.log("Saving child " + cv.gForm.getTableName() + " form id: " + cv.childId + " from master/parent: " + master.sysId + " ref: " + cv.referenceToParent, cv, master);
+    debugger;
     cv.gForm.setValue(cv.referenceToParent, master.sysId);
-    cv.gForm.submit(_getPrimaryAction(cv).action_name);
+    //cv.gForm.submit(_getPrimaryAction(cv).action_name);
+    saveForm(cv, "child");
   }
 
   /**
@@ -439,7 +541,8 @@
    * @return {undefined}
    */
   function _onChildSaveSuccess(evt, response) {
-
+    console.log("saved child.", response);
+    debugger;
     savedForms++;
 
     if (savedForms === childForms) {
@@ -457,7 +560,7 @@
 
     var childIncomplete = _getIncomplete(cv.gForm);
 
-    childIncomplete.forEach(function(fieldName) {
+    childIncomplete.forEach(function (fieldName) {
       _setErrorFieldMessage(fieldName, cv.gForm);
     });
 
@@ -469,7 +572,7 @@
    * @param {String} fieldName  The name of the field to set the message on
    */
   function _setErrorFieldMessage(fieldName, gForm) {
-    gForm.showFieldMsg(fieldName, i18n.getMessage("This field must be completed"), 'error');
+    gForm.showFieldMsg(fieldName, i18n.getMessage("This field must be completed"), "error");
   }
 
   /**
@@ -482,7 +585,7 @@
     var incomplete = [];
     var fieldNames = gFormInstance.getFieldNames();
 
-    fieldNames.forEach(function(fieldName) {
+    fieldNames.forEach(function (fieldName) {
       if (gFormInstance.isMandatory(fieldName)) {
         if (!_hasValue(fieldName, gFormInstance)) {
           incomplete.push(fieldName);
@@ -507,12 +610,12 @@
     var value = gFormInstance.getValue(fieldName);
 
     switch (field.type) {
-      case 'boolean_confirm':
-        return value === 'true';
-      case 'boolean':
+      case "boolean_confirm":
+        return value === "true";
+      case "boolean":
         return true;
-      case 'currency':
-        var currencyValues = value.split(';');
+      case "currency":
+        var currencyValues = value.split(";");
         return currencyValues[1] && currencyValues[1].length;
     }
 
@@ -520,7 +623,7 @@
       return false;
     }
 
-    if (typeof value === 'undefined') {
+    if (typeof value === "undefined") {
       return false;
     }
 
@@ -535,11 +638,11 @@
    */
   function _getPrimaryAction(item) {
 
-    var primaryActions = item.model._ui_actions.filter(function(action) {
+    var primaryActions = item.model._ui_actions.filter(function (action) {
       return action.primary;
     });
 
-    return (primaryActions.length) ? primaryActions[0] : '';
+    return (primaryActions.length) ? primaryActions[0] : "";
   }
 
   /**
@@ -553,7 +656,7 @@
 
     modelGForm.gForm.hideErrorBox(field);
 
-    valueChangeFuncs.forEach(function(cv) {
+    valueChangeFuncs.forEach(function (cv) {
       cv(field, newVal, modelGForm);
     });
   }
@@ -563,14 +666,14 @@
         <sys_created_by>dylan.lindgren</sys_created_by>
         <sys_created_on>2018-05-17 00:50:08</sys_created_on>
         <sys_id>8bec6836db06d340d19b468b3a961970</sys_id>
-        <sys_mod_count>143</sys_mod_count>
+        <sys_mod_count>160</sys_mod_count>
         <sys_name>x_pisn_multiform.Service.PiMfManager</sys_name>
         <sys_package display_value="Multiform" source="x_pisn_multiform">991a021fdb29d300d19b468b3a9619b4</sys_package>
         <sys_policy/>
         <sys_scope display_value="Multiform">991a021fdb29d300d19b468b3a9619b4</sys_scope>
         <sys_update_name>sys_ui_script_8bec6836db06d340d19b468b3a961970</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2018-09-11 01:01:22</sys_updated_on>
+        <sys_updated_by>jmaxwell</sys_updated_by>
+        <sys_updated_on>2019-12-30 07:08:41</sys_updated_on>
         <ui_type>0</ui_type>
         <use_scoped_format>false</use_scoped_format>
     </sys_ui_script>

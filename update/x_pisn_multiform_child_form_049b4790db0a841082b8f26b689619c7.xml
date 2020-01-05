@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="x_pisn_multiform_child_form">
+    <x_pisn_multiform_child_form action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <align_self>stretch</align_self>
+        <apply_to>entire_form</apply_to>
+        <description><![CDATA[<p>Problem</p>]]></description>
+        <flex_basis>auto</flex_basis>
+        <flex_grow>0</flex_grow>
+        <flex_shrink>1</flex_shrink>
+        <form_section/>
+        <location>bottom</location>
+        <max_child_records>1</max_child_records>
+        <min_child_records>1</min_child_records>
+        <order>0</order>
+        <parent display_value="Incident">ad4b83dcdbc6841082b8f26b68961913</parent>
+        <reference_to_parent>parent</reference_to_parent>
+        <sys_class_name>x_pisn_multiform_child_form</sys_class_name>
+        <sys_created_by>jmaxwell</sys_created_by>
+        <sys_created_on>2019-12-27 06:33:29</sys_created_on>
+        <sys_id>049b4790db0a841082b8f26b689619c7</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="Multiform" source="x_pisn_multiform">991a021fdb29d300d19b468b3a9619b4</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Multiform">991a021fdb29d300d19b468b3a9619b4</sys_scope>
+        <sys_update_name>x_pisn_multiform_child_form_049b4790db0a841082b8f26b689619c7</sys_update_name>
+        <sys_updated_by>jmaxwell</sys_updated_by>
+        <sys_updated_on>2019-12-27 06:37:40</sys_updated_on>
+        <table>problem</table>
+        <title>Problem</title>
+        <view/>
+    </x_pisn_multiform_child_form>
+</record_update>
